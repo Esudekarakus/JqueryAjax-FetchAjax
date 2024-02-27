@@ -1,0 +1,158 @@
+﻿<button onclick="GetList()">Listeyi Getir</button>
+<div id="list">
+    <table class="table table-secondary" id="table">
+        <thead>
+            <tr>
+                <th>Id</th>
+                <th>Hastane Adı</th>
+                <th>Adres</th>
+                <th>Güncelle</th>
+                <th>Sil</th>
+            </tr>
+        </thead>
+    </table>
+</div>
+<div id="error"></div>
+<h2>Hastane Ekle</h2>
+<div id="create">
+    <label>Hastane Adı</label>
+    <input type="text" id="name" />
+    <label>Adres</label>
+    <input type="text" id="adres" />
+    <button class="btn btn-success" onclick="CreateHospital()">Kaydet</button>
+</div>
+<h2>Hastaneyi Güncelle</h2>
+<div id="update">
+    <label>Id</label>
+    <input type="text" id="idUpdate" />
+    <label>Hastane Adı</label>
+    <input type="text" id="nameUpdate" />
+    <label>Adres</label>
+    <input type="text" id="adresUpdate" />
+    <button class="btn btn-success" onclick="UpdateHospital()">Kaydet</button>
+</div>
+<script>
+    function GetList() {
+        $.ajax({
+            type: "GET",
+            url: "https://localhost:7046/api/Hastane/GetAllHospitals",
+            contentType: "application/json",
+            dataType: "json",
+            success: function (data) {
+                $("#table").html("");
+                $("#error").html("");
+                $.each(data, function (i, item) {
+
+                    var rows = "<tr>" + "<td id=Id>" + item["id"] + "</td>" + "<td id=HastaneAd>" + item["hastaneAd"] + "</td>" + "<td id=Adres>" + item["adres"] + "</td>" + " <td><button onclick='GetHospital(" + item["id"] + ")'>Güncelle</button></td>" +" <td><button onclick='DeleteHospital(" + item["id"] + ")'>Sil</button></td>" + "</tr>";
+                    $("#table").append(rows);
+                })
+            },
+            error: function (data) {
+                $("#error").html("liste yüklenemedi");
+            }
+        });
+
+    }
+
+    function CreateHospital() {
+        let veri = {
+            
+            hastaneAd: $("#name").val(),
+            adres: $("#adres").val()
+        };
+        let veriJson = JSON.stringify(veri);
+        
+        $.ajax({
+            type: "POST",
+            url: "https://localhost:7046/api/Hastane/AddHospital",
+            contentType: "application/json",
+            data: veriJson,
+            success: function (data) {
+                alert("Hastane eklendi");
+                $("#name").val("");
+                $("#adres").val("");
+                GetList();
+            },
+            error: function (data) {
+                $("#error").html("liste yüklenemedi");
+            }
+
+        });
+
+
+
+     }
+
+    function GetHospital(id) {
+        $.ajax({
+            type: "GET",
+            url: "https://localhost:7046/api/Hastane/GetHospitalById?id=" + id,
+            contentType: "application/json",
+            dataType: "json",
+            success: function (data) {
+                $("#idUpdate").val(data.id);
+                $("#idUpdate").prop("readonly", true);
+                $("#nameUpdate").val(data.hastaneAd);
+                $("#adresUpdate").val(data.adres);
+               
+            },
+            error: function (data) {
+                $("#error").html("Hastane bilgileri getirilemedi");
+            }
+
+        });
+
+    }
+    function UpdateHospital() {
+        let veri = {
+            id: $("#idUpdate").val(),
+            hastaneAd: $("#nameUpdate").val(),
+            adres: $("#adresUpdate").val()
+        };
+        let veriJson = JSON.stringify(veri);
+        $.ajax({
+            type: "PUT", 
+            url: "https://localhost:7046/api/Hastane/UpdateHospital?id=" + $("#idUpdate").val(),
+            contentType: "application/json",
+            dataType:"json",
+            data: veriJson,
+            success: function (data) {
+                alert("Hastane güncellendi");
+               
+                $("#idUpdate").val("");
+                $("#nameUpdate").val("");
+                $("#adresUpdate").val("");
+                
+                // Refresh the hospital list after update
+                GetList();
+            },
+            error: function (data) {
+                $("#error").html("Hastane güncellenemedi");
+            }
+        });
+    }
+
+    function DeleteHospital(id) {
+        $.ajax({
+            type: "DELETE",
+            url: "https://localhost:7046/api/Hastane/DeleteHospital?id=" + id,
+            contentType: "application/json",
+            dataType: "json",
+            success: function (data) {
+                console.log(data);
+                alert("İşlem başarılı");
+                GetList();
+               
+            },
+            error: function (response) {
+                console.log(response);
+                alert("işlem başarsızı");
+            }
+            
+
+        });
+    }
+
+
+
+</script>

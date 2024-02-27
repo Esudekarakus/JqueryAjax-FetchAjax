@@ -1,0 +1,203 @@
+﻿
+<button onclick="GetListFetch()">Listeyi Getir</button>
+
+<div id="list">
+    <table class="table table-secondary">
+        <thead>
+            <tr>
+                <th>Id</th>
+                <th>Hastane Adı</th>
+                <th>Adres</th>
+                <th>Güncelle</th>
+                <th>Sil</th>
+            </tr>
+        </thead>
+        <tbody id="table"></tbody>
+    </table>   
+</div>
+
+<div id="errorFetch"></div>
+
+<h2>Hastane Ekle</h2>
+<div id="create">
+    <label>Hastane Adı</label>
+    <input type="text" id="name" />
+    <label>Adres</label>
+    <input type="text" id="adres" />
+    <button class="btn btn-success" onclick="CreateHospitalFetch()">Kaydet</button>
+</div>
+
+<h2>Hastaneyi Güncelle</h2>
+<div id="update">
+    <label>Id</label>
+    <input type="text" id="idUpdateFetch" readonly/>
+    <label>Hastane Adı</label>
+    <input type="text" id="nameUpdateFetch" />
+    <label>Adres</label>
+    <input type="text" id="adresUpdateFetch" />
+    <button class="btn btn-success" onclick="UpdateHospitalFetch()">Kaydet</button>
+</div>
+
+<script>
+    let api = "https://localhost:7046/api/Hastane/";
+    let table = document.querySelector("#table");
+    let error = document.querySelector("#errorFetch");
+    //let hospitals;
+    let nameDiv = document.querySelector("#name");
+    let adresDiv = document.querySelector("#adres");
+    let idDivUpdate = document.querySelector("#idUpdateFetch");
+    let nameDivUpdate = document.querySelector("#nameUpdateFetch");
+    let adresDivUpdate = document.querySelector("#adresUpdateFetch");
+
+    async function GetListFetch()
+    {
+        try {
+            // fetch(api + "GetAllHospitals").then(data => hospitals = data.json());
+            let response = await fetch(api + "GetAllHospitals");
+
+            let datas = await response.json();
+
+            let rows = "";
+            //if(response.ok)
+            if (response.ok) {
+                for (let hastane of datas) {
+                    rows += '<tr>' +
+                        '<td>' + hastane.id + '</td>' +
+                        '<td>' + hastane.hastaneAd + '</td>' +
+                        '<td>' + hastane.adres + '</td>' +
+                        '<td><button onclick=GetUpdateDiv(' + hastane.id + ')>Güncelle</button></td>' +
+                        '<td><button onclick=DeleteWithFetch(' + hastane.id + ')>Sil</button></td>' +
+                        '</tr>';
+                }
+                table.innerHTML = rows;
+            }
+            else {
+                
+            }
+        }
+        catch(error){
+            alert(error);
+           
+        }
+        
+       
+    }
+
+
+    async function CreateHospitalFetch() { 
+        try {
+            let ad = document.querySelector("#name").value;
+            let adres = document.querySelector("#adres").value;
+
+            let response = await fetch(api + "AddHospital", {
+                method: "POST",
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    HastaneAd: ad,
+                    Adres: adres,
+                }),
+            });
+            if (response.status == 200) {
+                alert("Başarıyla eklendi");
+
+                nameDiv.value = "";
+                adresDiv.value = "";
+                GetListFetch();
+            } else {
+                error.innerHTML = "<h2>hastane eklenemedi</h2>";
+            }
+
+        }
+        catch (error) {
+            alert(error);
+
+        }
+
+
+
+
+    }
+
+    async function GetUpdateDiv(id){
+        try { 
+            let response = await fetch(api + "GetHospitalById?id=" + id);
+
+            if (response.status == 200) {
+                let data = await response.json();
+
+
+                idDivUpdate.value = data.id;
+                nameDivUpdate.value = data.hastaneAd;
+                adresDivUpdate.value = data.adres;
+
+
+            } else {
+
+            }
+        }
+        catch (error) {
+            alert(error);
+
+        }
+        
+    }
+
+
+    async function UpdateHospitalFetch() {
+        try {
+            let veri = {
+                id: idDivUpdate.value,
+                hastaneAd: nameDivUpdate.value,
+                adres: adresDivUpdate.value
+            };
+            let response = await fetch(api + "UpdateHospital?id=" + veri.id, {
+                method: "PUT",
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(veri),
+            });
+            if (response.ok) {
+                alert("Başarıyla güncellendi");
+                idDivUpdate.value = "";
+                nameDivUpdate.value = "";
+                adresDivUpdate.value = "";
+
+                GetListFetch();
+            } else {
+               
+            }
+        }
+        catch (error) {
+            alert(error);
+            error.innerHTML = "<h2>hastane güncellenemedi</h2>";
+
+        }
+        
+    }
+
+    async function DeleteWithFetch(id) {
+        try {
+            let response = await fetch(api + "DeleteHospital?id=" + id, {
+                method: "DELETE",
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            });
+            if (response.status == 200) {
+                alert("Hastane Başarıyla Silindi");
+                GetListFetch();
+            } else {
+                
+            }
+
+        }
+        catch (error) {
+            alert(error);
+            error.innerHTML = "<h2>hastane güncellenemedi</h2>";
+        }
+        
+    }
+</script>
